@@ -1,3 +1,5 @@
+> **Fork extension:** Optional generic UART command/event transport based on release 0.7.0-rc13. See [configuration, protocol and validation status](docs/serial-transport.md). CrowPanel Advance DIS02050A hardware support is not yet verified.
+
 # openHASP firmware
 
 [![GitHub Workflow Status]( https://img.shields.io/github/actions/workflow/status/HASwitchPlate/openHASP/build.yaml?branch=master&label=build%20status&logo=github&logoColor=%23dddddd)](https://github.com/HASwitchPlate/openHASP/actions)
