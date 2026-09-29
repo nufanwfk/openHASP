@@ -1,16 +1,9 @@
 # Generic UART transport extension
 
-Based on upstream **0.7.0-rc13**, commit `042fe057`, the release GitHub marked
-latest when checked on 2026-09-27 UTC. This extension is optional firmware
-code, with an ESP32 hardware implementation, not a dynamically installed plugin. It uses openHASP's existing custom
-setup, loop, state, pin-reservation and sensor hooks. The only functional core
-change is a guarded layout-load notification in `src/hasp/hasp_page.cpp`.
-
-No NanoELS actions, Nextion emulation, widget mappings, or display layouts are
-included here. The matching H5 implementation lives in
-[nufanwfk/nanoels, codex/h5-openhasp-adapter](https://github.com/nufanwfk/nanoels/tree/codex/h5-openhasp-adapter).
-Use its **version 2 token event contract**; the earlier H5 JSON-event build is
-incompatible. MQTT retains its original payloads and processing.
+This extension is optional firmware code, with an ESP32 hardware
+implementation, not a dynamically installed plugin. It uses openHASP's existing
+custom setup, loop, state, pin-reservation and sensor hooks. The only functional
+core change is a guarded layout-load notification in `src/hasp/hasp_page.cpp`.
 
 ## Build and configuration
 
@@ -56,12 +49,6 @@ S3 USB CDC pins. A configured serial dimmer reserves UART1; a compiled Tasmota
 client reserves UART2. Do not add another UART consumer after boot. Custom
 hardware, microphone, SD and expansion circuitry still require a board-level
 pin review; software checks cannot establish electrical availability.
-
-**DIS02050A is not a verified target in this change.** The release's existing
-`elecrow-s3-8048c050_4MB` environment targets the older WZ8048C050. Do not flash
-that environment onto CrowPanel Advance based on the similar name, or copy its
-pin choices. Establish the Advance board's display/touch configuration and free
-UART pins separately. This extension does not provide a board port.
 
 ## Porting to other hardware
 
@@ -123,10 +110,9 @@ ready 1
 Object event names `down`, `up`, `release`, `lost`, `long`, `hold` and `changed`
 are extracted from the stock state payload using openHASP's existing ArduinoJson
 library. Only the top-level `event` string is used. Tags, values and metadata
-are omitted. H5 acts on down/up/release/lost and ignores other event names.
+are omitted.
 Numeric page states are forwarded. Other states remain MQTT-only. No broker,
-MQTT topic prefix or MQTT packet framing is carried on the UART. Keep page
-names unset when using H5 so object topics remain numeric.
+MQTT topic prefix or MQTT packet framing is carried on the UART. 
 
 The fixed output queue holds eight frames of up to 512 bytes before LF. The
 main loop drains at most 128 bytes at a time, limited by UART write capacity;
@@ -172,24 +158,9 @@ From the repository root, using the existing ArduinoJson 6 dependency:
 python3 tests/serial_transport/run_tests.py --arduinojson /path/to/ArduinoJson
 ```
 
-Optionally test actual panel output against the H5 receiver and all 60 mappings:
-
-```sh
-python3 tests/serial_transport/run_tests.py \
-  --arduinojson /path/to/ArduinoJson --h5 /path/to/nanoels/h5
-```
-
 `CXX` and `CXXFLAGS` may override the host compiler/flags. Host tests compile the
 actual extension with fake hardware and real ArduinoJson, with MQTT both enabled
 and disabled in the test configuration. They cover configuration validation,
 pin conflicts, framing/limits, nonblocking partial output, overflow recovery,
 startup ordering, filtered events, reload and H5 compatibility. The production
 MQTT dispatcher is unchanged; fake-hardware tests do not exercise a real broker.
-
-Host and address/undefined-behavior sanitizer tests passed. The common extension and ESP32 HAL sources
-also compiled to ESP32-S3 objects against the installed Arduino-ESP32 framework
-and real UART/FreeRTOS headers, with openHASP interfaces stubbed. That is not a
-complete firmware build. The full release build was attempted but blocked during
-PlatformIO dependency download by the execution environment's network policy.
-A separate fake-HAL test also verifies operation without ESP32 APIs, and the
-unsupported-target fallback is tested. No panel firmware has been flashed and hardware testing remains pending.
