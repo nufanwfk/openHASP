@@ -1311,7 +1311,7 @@ void webHandleGuiConfig(AsyncWebServerRequest* request)
         httpMessage += getOption(-1, F("None"), bcklpin == -1);
 #if defined(ARDUINO_ARCH_ESP32)
         add_gpio_select_option(httpMessage, 5, bcklpin);  // D8 on ESP32 for D1 mini 32
-        add_gpio_select_option(httpMessage, 12, bcklpin); // TFT_LED on the Liligo Pi
+        add_gpio_select_option(httpMessage, 12, bcklpin); // TFT_LED on the Lilygo Pi
         add_gpio_select_option(httpMessage, 13, bcklpin); // TFT_LED on the D1 R32 + Waveshare
         add_gpio_select_option(httpMessage, 15, bcklpin); // TFT_LED on the AZ Touch
         add_gpio_select_option(httpMessage, 16, bcklpin); // D4 on ESP32 for D1 mini 32
@@ -1462,7 +1462,7 @@ void webHandleGpioConfig(AsyncWebServerRequest* request)
         httpMessage += F("<table><tr><th>" D_GPIO_PIN "</th><th>Type</th><th>" D_GPIO_GROUP
                          "</th><th>Default</th><th>Action</th></tr>");
 
-        for(uint8_t gpio = 0; gpio < NUM_DIGITAL_PINS; gpio++) {
+        for(uint8_t gpio = 0; gpio < HASP_GPIO_PIN_COUNT; gpio++) {
             for(uint8_t id = 0; id < HASP_NUM_GPIO_CONFIG; id++) {
                 hasp_gpio_config_t conf = gpioGetPinConfig(id);
                 if((conf.pin == gpio) && gpioConfigInUse(id) && gpioInUse(gpio) && !gpioIsSystemPin(gpio)) {
@@ -1479,7 +1479,7 @@ void webHandleGpioConfig(AsyncWebServerRequest* request)
 
                     switch(conf.type) {
 
-                        case hasp_gpio_type_t::BUTTON:
+                        case hasp_gpio_type_t::BUTTON_TYPE:
                             httpMessage += F(D_GPIO_BUTTON);
                             break;
                         case hasp_gpio_type_t::SWITCH:
@@ -1643,7 +1643,7 @@ void webHandleGpioOutput(AsyncWebServerRequest* request)
     httpMessage += F("<p><b>" D_GPIO_PIN "</b> <select id='pin' name='pin'>");
     hasp_gpio_config_t conf = gpioGetPinConfig(config_id);
 
-    for(uint8_t io = 0; io < NUM_DIGITAL_PINS; io++) {
+    for(uint8_t io = 0; io < HASP_GPIO_PIN_COUNT; io++) {
         if(((conf.pin == io) || !gpioInUse(io)) && !gpioIsSystemPin(io)) {
             httpMessage += getOption(io, haspDevice.gpio_name(io).c_str(), conf.pin == io);
         }
@@ -1747,7 +1747,7 @@ void webHandleGpioInput(AsyncWebServerRequest* request)
         httpMessage += F("<p><b>" D_GPIO_PIN "</b> <select id='pin' name='pin'>");
         hasp_gpio_config_t conf = gpioGetPinConfig(config_id);
 
-        for(uint8_t io = 0; io < NUM_DIGITAL_PINS; io++) {
+        for(uint8_t io = 0; io < HASP_GPIO_PIN_COUNT; io++) {
             if(((conf.pin == io) || !gpioInUse(io)) && !gpioIsSystemPin(io)) {
                 httpMessage += getOption(io, haspDevice.gpio_name(io).c_str(), conf.pin == io);
             }
@@ -1757,8 +1757,8 @@ void webHandleGpioInput(AsyncWebServerRequest* request)
         bool selected;
         httpMessage += F("<p><b>Type</b> <select id='type' name='type'>");
 
-        selected = (conf.type == hasp_gpio_type_t::BUTTON);
-        httpMessage += getOption(hasp_gpio_type_t::BUTTON, F(D_GPIO_BUTTON), selected);
+        selected = (conf.type == hasp_gpio_type_t::BUTTON_TYPE);
+        httpMessage += getOption(hasp_gpio_type_t::BUTTON_TYPE, F(D_GPIO_BUTTON), selected);
 
         selected = (conf.type == hasp_gpio_type_t::SWITCH);
         httpMessage += getOption(hasp_gpio_type_t::SWITCH, F(D_GPIO_SWITCH), selected);

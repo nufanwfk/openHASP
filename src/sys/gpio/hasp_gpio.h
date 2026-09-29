@@ -29,6 +29,15 @@ struct hasp_gpio_config_t
 
 extern hasp_gpio_config_t gpioConfig[HASP_NUM_GPIO_CONFIG];
 
+/* Arduino-esp32 S3 variant sets NUM_DIGITAL_PINS to 48 (GPIO 0..47). The chip has GPIO 48. */
+#ifndef HASP_GPIO_PIN_COUNT
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+#define HASP_GPIO_PIN_COUNT 49
+#else
+#define HASP_GPIO_PIN_COUNT NUM_DIGITAL_PINS
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -134,7 +143,7 @@ enum hasp_gpio_type_t {
     TAMPER           = 0xBB,
     UPDATE           = 0xBC,
 
-    BUTTON             = 0xF0,
+    BUTTON_TYPE        = 0xF0,
     BUTTON_TOGGLE_UP   = 0xF1,
     BUTTON_TOGGLE_DOWN = 0xF2,
     BUTTON_TOGGLE_BOTH = 0xF3,
