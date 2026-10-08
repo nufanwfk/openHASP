@@ -62,3 +62,8 @@ package-lock.json
 
 test/config.yaml
 tools/mklittlefs*
+# Optional generic UART transport source files
+!src/custom/my_custom.h
+!src/custom/uart_transport.cpp
+!src/custom/uart_framing.h
+!src/custom/uart_messages.h
