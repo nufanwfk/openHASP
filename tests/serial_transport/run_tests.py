@@ -11,7 +11,7 @@ root = Path(__file__).resolve().parents[2]
 p = argparse.ArgumentParser()
 p.add_argument('--arduinojson', type=Path, required=True, help='ArduinoJson 6 library root (already an openHASP dependency)')
 args = p.parse_args()
-includes = ['-I' + str(root / 'src/custom'), '-I' + str(root / 'tests/serial_transport/stubs'), '-I' + str(root / 'src'), '-I' + str(args.arduinojson / 'src')]
+includes = ['-I' + str(root / 'src/sys/svc'), '-I' + str(root / 'tests/serial_transport/stubs'), '-I' + str(root / 'src'), '-I' + str(args.arduinojson / 'src')]
 with tempfile.TemporaryDirectory() as tmp:
     for name, extra in [('framing', []), ('integration', ['-DHASP_USE_MQTT=0']), ('integration', ['-DHASP_USE_MQTT=1']), ('portable', ['-DTEST_UART_EXTERNAL_HAL=1']), ('portable', ['-DTEST_UART_UNSUPPORTED=1'])]:
         output = str(Path(tmp) / (name + str(len(extra))))

@@ -1,6 +1,6 @@
 // MIT License. Stock openHASP state JSON to token events; platform-independent.
 #pragma once
-#include "uart_framing.h"
+#include "hasp_uart_framing.h"
 #include <ArduinoJson.h>
 #include <stdio.h>
 #include <initializer_list>

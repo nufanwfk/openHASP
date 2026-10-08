@@ -1,6 +1,6 @@
 #include <cassert>
 #include "../../src/hal/esp32/hasp_uart_esp32.cpp"
-#include "../../src/custom/uart_transport.cpp"
+#include "../../src/sys/svc/hasp_uart_transport.cpp"
 #include "hasp_filesystem.h"
 using namespace hasp_uart::hal;
 std::string configText;
@@ -11,8 +11,8 @@ Device haspDevice;
 TFT haspTft;
 GpioConfig configs[2];
 void dispatch_text_line(const char* line, uint8_t) { commands.push_back(line); }
-void tick(unsigned n=100) { while(n--) custom_loop(); }
-void configure(const std::string& cfg) { configText=cfg; custom_setup(); }
+void tick(unsigned n=100) { while(n--) hasp_uart::uartTransport.loop(); }
+void configure(const std::string& cfg) { configText=cfg; hasp_uart::uartTransport.setup(); }
 int main() {
     configure(""); assert(!uart);
     configure("{broken"); assert(!uart);
@@ -30,38 +30,38 @@ int main() {
     const char* valid = "{\"enabled\":true,\"uart\":1,\"rx\":17,\"tx\":18,\"baud\":115200}";
     configure(valid); assert(!uart);
     configs[0].type = 0;
-    custom_uart_layout_loaded(); // normal boot order: layout before custom_setup
+    hasp_uart::uartTransport.onLayoutLoaded(); // normal boot order: layout before setup
     configure(valid); assert(uart == &Serial1);
     assert(Serial1.baud == 115200 && Serial1.rx == 17 && Serial1.tx == 18);
-    assert(custom_pin_in_use(17) && custom_pin_in_use(18) && !custom_pin_in_use(16));
-    custom_state_subtopic("page", "2"); // startup events suppressed
+    assert(hasp_uart::uartTransport.ownsPin(17) && hasp_uart::uartTransport.ownsPin(18) && !hasp_uart::uartTransport.ownsPin(16));
+    hasp_uart::uartTransport.publishState("page", "2"); // startup events suppressed
     tick(); assert(Serial1.output == "\nready 1\n");
     Serial1.output.clear();
     for(char c : std::string("page 2\njsonl {\"page\":1}\r\n")) Serial1.input.push_back(c);
     tick(); assert(commands == (std::vector<std::string>{"page 2","jsonl {\"page\":1}"}));
-    custom_state_subtopic("p1b48", "{\"event\":\"down\"}");
-    custom_state_subtopic("p1b48", "{\"event\":\"release\"}");
+    hasp_uart::uartTransport.publishState("p1b48", "{\"event\":\"down\"}");
+    hasp_uart::uartTransport.publishState("p1b48", "{\"event\":\"release\"}");
     tick(); assert(Serial1.output == "event p1b48 down\nevent p1b48 release\n");
     Serial1.output.clear();
-    custom_state_subtopic("p1b49", "{\"tag\":{\"event\":\"up\"}}");
-    custom_state_subtopic("p1b49", "{\"event\":true}");
-    custom_state_subtopic("p1b49", "{\"event\":\"invalid\"}");
-    custom_state_subtopic("statusupdate", "{\"uptime\":10}");
-    custom_state_subtopic("page", "2junk");
-    custom_state_subtopic("page", "256");
-    custom_state_subtopic("page", "main");
-    custom_state_subtopic("p1b49", "{\"tag\":{\"some\":\"metadata\"},\"event\":\"lost\"}");
+    hasp_uart::uartTransport.publishState("p1b49", "{\"tag\":{\"event\":\"up\"}}");
+    hasp_uart::uartTransport.publishState("p1b49", "{\"event\":true}");
+    hasp_uart::uartTransport.publishState("p1b49", "{\"event\":\"invalid\"}");
+    hasp_uart::uartTransport.publishState("statusupdate", "{\"uptime\":10}");
+    hasp_uart::uartTransport.publishState("page", "2junk");
+    hasp_uart::uartTransport.publishState("page", "256");
+    hasp_uart::uartTransport.publishState("page", "main");
+    hasp_uart::uartTransport.publishState("p1b49", "{\"tag\":{\"some\":\"metadata\"},\"event\":\"lost\"}");
     tick(); assert(Serial1.output == "event p1b49 lost\n");
     Serial1.output.clear();
     Serial1.room = 0;
-    custom_state_subtopic("page", "2"); tick(); assert(Serial1.output.empty());
-    custom_uart_layout_loaded();
-    custom_state_subtopic("page", "1");
+    hasp_uart::uartTransport.publishState("page", "2"); tick(); assert(Serial1.output.empty());
+    hasp_uart::uartTransport.onLayoutLoaded();
+    hasp_uart::uartTransport.publishState("page", "1");
     Serial1.room = 7; tick(); assert(Serial1.output == "\nready 1\npage 1\n");
     Serial1.output.clear();
-    custom_topic_payload("serialready", "1", 0); tick(); assert(Serial1.output == "\nready 1\n");
+    assert(hasp_uart::uartTransport.handleCustomCommand("serialready", "1", 0)); tick(); assert(Serial1.output == "\nready 1\n");
     StaticJsonDocument<256> doc;
-    custom_get_sensors(doc); assert(doc["serial"]["dropped"].as<int>() == 0);
+    hasp_uart::uartTransport.appendSensorData(doc); assert(doc["serial"]["dropped"].as<int>() == 0);
     vSemaphoreDelete(txMutex);
     puts("PASS: actual UART extension, configuration, pin conflicts, startup, events, reload and dispatch");
 }

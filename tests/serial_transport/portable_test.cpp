@@ -1,7 +1,7 @@
 // Same common extension on a platform with no ESP32, HardwareSerial or RTOS APIs.
 #include <cassert>
 #include <deque>
-#include "../../src/custom/uart_transport.cpp"
+#include "../../src/sys/svc/hasp_uart_transport.cpp"
 #include "hasp_filesystem.h"
 #include "../../src/hal/hasp_uart_unsupported.cpp"
 std::string configText;
@@ -33,23 +33,23 @@ void unlock() { assert(locked); locked=false; }
 #endif
 int main() {
     configText = "{\"enabled\":true,\"uart\":4,\"rx\":101,\"tx\":102,\"baud\":115200}";
-    custom_uart_layout_loaded();
-    custom_setup();
+    hasp_uart::uartTransport.onLayoutLoaded();
+    hasp_uart::uartTransport.setup();
 #ifdef TEST_UART_EXTERNAL_HAL
     using namespace hasp_uart::hal;
-    assert(active() && custom_pin_in_use(101));
+    assert(active() && hasp_uart::uartTransport.ownsPin(101));
     for(char c : std::string("page 2\n")) incoming.push_back(c);
-    for(int i=0;i<20;++i) custom_loop();
+    for(int i=0;i<20;++i) hasp_uart::uartTransport.loop();
     assert(commands == std::vector<std::string>{"page 2"});
     assert(outgoing == "\nready 1\n");
-    custom_state_subtopic("p1b48", "{\"event\":\"down\"}");
-    for(int i=0;i<20;++i) custom_loop();
+    hasp_uart::uartTransport.publishState("p1b48", "{\"event\":\"down\"}");
+    for(int i=0;i<20;++i) hasp_uart::uartTransport.loop();
     assert(outgoing == "\nready 1\nevent p1b48 down\n");
     puts("PASS: common transport on independent HAL, non-ESP32 pins/port and short writes");
 #else
     assert(!hasp_uart::hal::active());
-    custom_loop();
-    custom_state_subtopic("p1b48", "{\"event\":\"down\"}");
+    hasp_uart::uartTransport.loop();
+    hasp_uart::uartTransport.publishState("p1b48", "{\"event\":\"down\"}");
     assert(commands.empty());
     puts("PASS: unsupported hardware remains disabled without ESP32 dependencies");
 #endif

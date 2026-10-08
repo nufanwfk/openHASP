@@ -1,9 +1,9 @@
-# Generic UART transport extension
+# Generic UART transport
 
 This extension is optional firmware code, with an ESP32 hardware
-implementation, not a dynamically installed plugin. It uses openHASP's existing
-custom setup, loop, state, pin-reservation and sensor hooks. The only functional
-core change is a guarded layout-load notification in `src/hasp/hasp_page.cpp`.
+implementation, not a dynamically installed plugin. `hasp_uart::UartTransport`
+owns its configuration, lifecycle, framing state, dispatch integration and
+diagnostics.
 
 ## Build and configuration
 
@@ -11,13 +11,11 @@ Add these flags to your existing board environment or `override.build_flags`
 in `platformio_override.ini`:
 
 ```ini
--D HASP_USE_CUSTOM=1
 -D HASP_USE_UART_TRANSPORT=1
 ```
 
-Both flags must be set. Leave both unset for stock behavior. This implementation
-occupies `my_custom.h` and the custom callbacks; merge callbacks explicitly if
-you already have a different custom extension. A separate LVGL task requires
+Leave the flag unset for stock behavior. UART transport and custom extensions are
+independent features and may be enabled together. A separate LVGL task requires
 openHASP's ESP MQTT/GUI mutex support; unsupported combinations fail compilation.
 
 Upload `/serial.json` using the normal panel file editor, then restart. This
@@ -58,9 +56,9 @@ without changing BaseDevice.
 
 | Layer | Files | Responsibilities |
 | --- | --- | --- |
-| Framing | `src/custom/uart_framing.h` | Bounded lines, output queue, partial writes, readiness marker; standard C++ only |
-| Message content | `src/custom/uart_messages.h` | Stock state JSON to event/page tokens; existing ArduinoJson dependency only |
-| openHASP integration | `src/custom/uart_transport.cpp` | Custom hooks, configuration file, main-loop command dispatch |
+| Framing | `src/sys/svc/hasp_uart_framing.h` | Bounded lines, output queue, partial writes, readiness marker; standard C++ only |
+| Message content | `src/sys/svc/hasp_uart_messages.h` | Stock state JSON to event/page tokens; existing ArduinoJson dependency only |
+| openHASP integration | `src/sys/svc/hasp_uart_transport.{h,cpp}` | UartTransport configuration, lifecycle, dispatch, pin ownership and diagnostics |
 | Hardware contract | `src/hal/hasp_uart.h` | UART configuration, byte I/O, pin ownership, locking |
 | ESP32 implementation | `src/hal/esp32/hasp_uart_esp32.cpp` | HardwareSerial, pin/UART checks and FreeRTOS mutex |
 
@@ -81,7 +79,7 @@ they do not accidentally enable unvalidated pins.
 
 The current configuration loader uses openHASP's `HASP_FS` when SPIFFS/LittleFS
 is enabled. Platforms using another storage model also need to supply configuration
-loading in the integration layer; message encoding and parsing need no changes.
+loading in UartTransport; message encoding and parsing need no changes.
 
 ## Wire format
 
@@ -139,7 +137,7 @@ parser still reports layout errors through normal logging.
 
 Uploading a layout file alone does not load it. Use the normal panel reload
 operation or restart. For layouts streamed as individual JSONL commands, send
-this stock custom command after the complete layout is installed:
+this compatibility command after the complete layout is installed:
 
 ```text
 custom/serialready 1
@@ -162,5 +160,6 @@ python3 tests/serial_transport/run_tests.py --arduinojson /path/to/ArduinoJson
 actual extension with fake hardware and real ArduinoJson, with MQTT both enabled
 and disabled in the test configuration. They cover configuration validation,
 pin conflicts, framing/limits, nonblocking partial output, overflow recovery,
-startup ordering, filtered events, reload, event encoding and command dispatch. The production
-MQTT dispatcher is unchanged; fake-hardware tests do not exercise a real broker.
+startup ordering, filtered events, reload, event encoding and command dispatch.
+The production MQTT dispatcher is unchanged; fake-hardware tests do not exercise
+a real broker.

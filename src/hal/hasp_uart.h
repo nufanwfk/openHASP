@@ -1,4 +1,4 @@
-// MIT License. Portable byte-stream contract for the optional custom transport.
+// MIT License. Portable byte-stream contract for the optional UART transport.
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
