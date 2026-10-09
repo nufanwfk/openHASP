@@ -147,19 +147,3 @@ It can also be used to resend readiness when the host starts after the panel.
 There is no periodic ready spam, heartbeat, acknowledgement, or link-loss
 watchdog. A wire/power failure can still lose a held touch's release. Hardware
 validation and a separate decision on link-loss handling remain necessary.
-
-## Tests and validation
-
-From the repository root, using the existing ArduinoJson 6 dependency:
-
-```sh
-python3 tests/serial_transport/run_tests.py --arduinojson /path/to/ArduinoJson
-```
-
-`CXX` and `CXXFLAGS` may override the host compiler/flags. Host tests compile the
-actual extension with fake hardware and real ArduinoJson, with MQTT both enabled
-and disabled in the test configuration. They cover configuration validation,
-pin conflicts, framing/limits, nonblocking partial output, overflow recovery,
-startup ordering, filtered events, reload, event encoding and command dispatch.
-The production MQTT dispatcher is unchanged; fake-hardware tests do not exercise
-a real broker.
