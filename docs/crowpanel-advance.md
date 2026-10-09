@@ -19,10 +19,6 @@ GPIO1 if the GT911 does not initially respond. If the controller at `0x30`
 is missing, the board-specific code does not pulse GPIO1 or send backlight
 commands. These behaviors follow Elecrow's [V1.2/V1.3 startup example](https://github.com/Elecrow-RD/CrowPanel-Advance-5-HMI-ESP32-S3-AI-Powered-IPS-Touch-Screen-800x480/blob/19b0f58cdb046493238f1dbf2e04215cf8d6bdec/example/V1.2_and_V1.3/Arduino/lesson-03/BigInch_LVGL/BigInch_LVGL.ino).
 
-This board profile does not configure a UART transport. GPIO19/20 are not
-claimed by the display profile. Any serial transport and its wiring should
-be configured and tested separately.
-
 Before using the profile on hardware, confirm the PCB marking is V1.3 and
 the module is the N16R8 variant. After flashing, verify that the image,
 touch coordinates, brightness and off/on commands work. A successful build
